@@ -1,24 +1,50 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from "react";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
+import useThunkReducer from "./hooks/useThunkReducer";
+
+import SavedPokemon from "./components/SavedPokemon";
+import PokemonDashboard from "./components/PokemonDashboard";
+import Header from "./components/Header";
+import { fetchAllPokemon } from "./apiCalls/pokemon";
+
+const initialState = [];
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "RESPONSE_COMPLETED": {
+      return action.payload.allPokemon;
+    }
+    default:
+      return state;
+  }
+};
 
 function App() {
+  const [state, dispatch] = useThunkReducer(reducer, initialState);
+
+  useEffect(() => {
+    dispatch(fetchAllPokemon);
+  }, [dispatch]);
+  const { data: allPokemon, error } = state;
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <BrowserRouter>
+        <Header />
+        <Switch>
+          <Route
+            path="/"
+            exact
+            render={props => (
+              <PokemonDashboard
+                {...props}
+                allPokemon={allPokemon}
+                error={error}
+              />
+            )}
+          />
+          <Route path="/saved" component={SavedPokemon} />
+        </Switch>
+      </BrowserRouter>
     </div>
   );
 }
